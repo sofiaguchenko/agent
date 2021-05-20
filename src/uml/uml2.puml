@@ -1,0 +1,9 @@
+@startuml
+actor User
+control "Agent"
+collections "Media Source"
+User -> "Agent"
+"Agent" -> "Media Source"
+"Media Source" --> "Agent"
+"Agent" --> User
+@enduml
