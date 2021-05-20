@@ -1,0 +1,9 @@
+@startuml
+
+actor :Користувач: as K
+
+usecase "Отримати інформацію з вказаних джерел" as UC_01
+
+K --r-> UC_01
+
+@enduml
