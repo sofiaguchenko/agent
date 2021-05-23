@@ -1,13 +1,13 @@
 {
-  "name": "UntitledProject",
+  "name": "Agent",
   "version": "1.2.3",
   "description": "Reddit scrapping agent",
   "main": "src/js/app.js",
   "scripts": {
     "start": "node ./src/js/app",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
-  "authors": "Shchuryk Yevhenii, Sofia Guchenko",
+  "author": "Sofia Guchenko",
   "dependencies": {
     "cli-progress": "^3.9.0",
     "puppeteer": "^8.0.0",
@@ -15,7 +15,9 @@
     "queue-promise": "^2.2.0"
   },
   "devDependencies": {
+    "axios": "^0.21.1",
     "jest": "^26.6.3",
     "json": "^11.0.0"
   }
 }
+
