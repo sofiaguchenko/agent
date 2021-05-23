@@ -1,86 +1,63 @@
-const puppeteer = require('puppeteer');
+let cheerio = require('cheerio');
+let axios = require('axios');
 
-/** Scrapper module
- *
- * @param reddit
- * @returns {string}
- * @constructor
- */
 // Subreddit link creation
 const SUBREDDIT_URL = (reddit) => `https://old.reddit.com/${reddit}/`;
 
 const self = {
-    browser: null,
-    page: null,
 
     // Scrapper initialization
     initialize: async (reddit, tn) => {
 
-        // Headless browser launch
-        self.browser = await puppeteer.launch({
-            headless: true
-        });
-
-        // Creation of a new page in puppeteer browser, and results[] declaration
-        self.page = await self.browser.newPage();
         let results = [];
 
         // Try/Catch Block
-        try {
+        // try {
 
-            // Going from blank page to current subreddit
-            await self.page.goto(SUBREDDIT_URL(reddit), {waitUntil: 'networkidle0', timeout: 0});
+        await axios.get(SUBREDDIT_URL(reddit)).then(urlResponse => {
+            const $ = cheerio.load(urlResponse.data);
 
-            // Creating PostsObject list
-            let elements = await self.page.$$('#siteTable > div[class *= "thing"]');
 
-            // Iterating posts, until the post index will be equal to target number(tn)
-            for (let element of elements) {
-                if (elements.indexOf(element) < tn) {
+            $('div.thing').each((i, element) => {
+                if(i < tn) {
+                    const title = $(element).find('p.title > a').text();
 
-                    // Scrapping page for necessary information using selectors
-                    let title = await element.$eval(('p[class = "title"] > a'), node => node.innerText.trim());
+                    let author = $(element).find('p.tagline > a.author').text();
 
-                    let author = await element.$eval(('p[class = "tagline "] > a[class *= "author"]'), node => node.innerText.trim());
-
-                    let authorUrlTemp = await element.$eval(('p[class = "tagline "] > a[class *= "author"]'), node => node.getAttribute('href'));
+                    let authorUrlTemp = $(element).find('p.tagline > a.author').attr('href');
                     let authorUrl = authorUrlTemp.replace("old.reddit.com", "www.reddit.com");
 
-                    let score = await element.$eval(('div[class = "score unvoted"]'), node => node.innerText.trim());
-                    let time = await element.$eval(('p[class = "tagline "] > time'), node => node.getAttribute('title'));
+                    let score = $(element).find('div.score.unvoted').text();
+                    let time =  $(element).find('p.tagline > time').attr('title');
 
-                    let urlTemp = await element.$eval(('li[class = "first"] > a'), node => node.getAttribute('href'));
+                    let urlTemp =  $(element).find('li.first > a').attr('href');
                     let url = urlTemp.replace("old.reddit.com", "www.reddit.com");
 
                     let mediaUrl;
 
                     try {
-                        mediaUrl = "https://" + (await element.$eval(('a[class = "thumbnail invisible-when-pinned may-blank outbound"] > img, a[class = "thumbnail invisible-when-pinned may-blank "] > img, a[class = "thumbnail invisible-when-pinned self may-blank "] > img'), node => node.getAttribute('src')));
+                        mediaUrl = "https://" + ($(element).find('a.thumbnail.invisible-when-pinned > img').attr('src'));
                     } catch (UnhandledPromiseRejectionWarning) {
                         mediaUrl = "No media";
                     }
 
-                    // Pushing found information into the result list(if no errors caught)
-                    results.push({
-                        title,
-                        author,
-                        authorUrl,
-                        score,
-                        time,
-                        url,
-                        mediaUrl
-                    })
+                    results.push({title: title,
+                        author: author,
+                        authorUrl: authorUrl,
+                        score: score,
+                        time: time,
+                        url: url,
+                        mediaUrl: mediaUrl})
                 } else {
-                    break
+                    return false
                 }
-            }
-        } catch (TimeoutError){
-            // Pushing error information into the result list(if Time Out Error caught)
-            results.push({"Error": "TimeoutError"})
-        }
+            })
 
-        // Returning results
-        return results;
+
+        })
+
+        return results
+
     }
 }
 
